@@ -62,7 +62,7 @@ func UpdateAnime(s *discordgo.Session) {
 			channel = static.HentaiNewsChannelID
 			s.ChannelMessageSend(channel, "--------------------------\n  Hentai of Today\n--------------------------")
 			if len(animeSchedules[idx].Days) == 0 {
-				s.ChannelMessageSend(channel, fmt.Sprintf("Check release schedule here %s", fmt.Sprintf("https://www.underhentai.net/releases-%d/", time.Now().Year())))
+				s.ChannelMessageSend(channel, fmt.Sprintf("No releases today!. Check release schedule here %s", fmt.Sprintf("https://www.underhentai.net/releases-%d/", time.Now().Year())))
 			}
 		}
 		for _, day := range schedule.Days {
