@@ -28,6 +28,9 @@ var Commands = map[string]Command{
 // AnimeNewsChannelID id
 const AnimeNewsChannelID = "805446666428612659"
 
+// HentaiNewsChannelID id
+const HentaiNewsChannelID = "809693883809923082"
+
 // Prefix for discord commands
 const Prefix = "+"
 
