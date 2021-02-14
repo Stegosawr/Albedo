@@ -96,7 +96,7 @@ func scraperAnime() (AnimeSchedule, error) {
 	re := regexp.MustCompile("\"(/anime/[0-9]{1,5})")
 	matchedURLs := re.FindAllStringSubmatch(htmlBody, -1)
 
-	re = regexp.MustCompile("aid=[0-9]*\">(.*) -? ?([a-zA-Z0-9]*)")
+	re = regexp.MustCompile("aid=[0-9]*\">(.*) ?-? ?([a-zA-Z0-9]*)<")
 	matchedTitles := re.FindAllStringSubmatch(htmlBody, -1)
 
 	re = regexp.MustCompile("https://cdn-eu.anidb.net/images/[^/]*/[^-]*")

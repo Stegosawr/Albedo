@@ -25,7 +25,7 @@ func TestScrapeAnime(t *testing.T) {
 		name string
 	}{
 		{
-			name: "Get Hentai Releases",
+			name: "Get Anime Releases",
 		},
 	}
 	for _, tt := range tests {
