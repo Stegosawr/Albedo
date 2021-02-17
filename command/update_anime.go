@@ -62,12 +62,12 @@ func UpdateAnime(s *discordgo.Session) {
 			channel = static.HentaiNewsChannelID
 			s.ChannelMessageSend(channel, "--------------------------\n  Hentai of Today\n--------------------------")
 			if len(animeSchedules[idx].Days) == 0 {
-				s.ChannelMessageSend(channel, fmt.Sprintf("No releases today!. Check release schedule here %s", fmt.Sprintf("https://www.underhentai.net/releases-%d/", time.Now().Year())))
+				s.ChannelMessageSend(channel, fmt.Sprintf("No releases today! Check release schedule here %s", fmt.Sprintf("https://www.underhentai.net/releases-%d/", time.Now().Year())))
 			}
 		}
 		for _, day := range schedule.Days {
 			for _, a := range day.Animes {
-				time.Sleep(1 * time.Second)
+				time.Sleep(2 * time.Second)
 				_, err = s.ChannelMessageSendEmbed(channel, &discordgo.MessageEmbed{
 					URL:         a.URL,
 					Title:       a.Title,
@@ -96,7 +96,7 @@ func scraperAnime() (AnimeSchedule, error) {
 	re := regexp.MustCompile("\"(/anime/[0-9]{1,5})")
 	matchedURLs := re.FindAllStringSubmatch(htmlBody, -1)
 
-	re = regexp.MustCompile("aid=[0-9]*\">(.*) ?-? ?([a-zA-Z0-9]*)<")
+	re = regexp.MustCompile("aid=[0-9]*\">(.*?)(?: - ([a-zA-Z0-9]*))?<")
 	matchedTitles := re.FindAllStringSubmatch(htmlBody, -1)
 
 	re = regexp.MustCompile("https://cdn-eu.anidb.net/images/[^/]*/[^-]*")
