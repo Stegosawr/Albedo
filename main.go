@@ -49,7 +49,7 @@ func main() {
 	}
 
 	if _, err := dg.Channel(static.AnimeNewsChannelID); err == nil {
-		timeTillInitialRun, _ := time.ParseDuration(fmt.Sprintf("%vh", 27-time.Now().Hour()))
+		timeTillInitialRun, _ := time.ParseDuration(fmt.Sprintf("%vh", 25-time.Now().Hour()))
 		t := time.NewTimer(timeTillInitialRun)
 		go func() {
 			for {
@@ -91,6 +91,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		command.Ping(s, m)
 	case "anime":
 		command.UpdateAnime(s)
+	case "watch anime":
+		s.ChannelMessageSend(m.ChannelID, "https://piracy.moe/")
 	case "delmsg":
 		command.DeleteAllMessagesInChannel(s, m.ChannelID)
 	case re.FindString(m.Content):

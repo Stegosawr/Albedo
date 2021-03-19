@@ -66,15 +66,16 @@ func UpdateAnime(s *discordgo.Session) {
 		}
 		for _, day := range schedule.Days {
 			for _, a := range day.Animes {
-				time.Sleep(2 * time.Second)
+				time.Sleep(5 * time.Second)
 				_, err = s.ChannelMessageSendEmbed(channel, &discordgo.MessageEmbed{
 					URL:         a.URL,
 					Title:       a.Title,
-					Description: fmt.Sprintf("Episode %s", a.Episode),
+					Description: a.Episode,
 					Image: &discordgo.MessageEmbedImage{
 						URL: a.ThumbURL,
 					},
 				})
+				//s.ChannelMessageSend(channel, a.ThumbURL)
 				if err != nil {
 					fmt.Println(err)
 				}
@@ -105,7 +106,7 @@ func scraperHentai() (AnimeSchedule, error) {
 			URL:      fmt.Sprintf("%s%s", "https://www.underhentai.net", matchedImgTag[1]),
 			Title:    matchedImgTag[2],
 			ThumbURL: fmt.Sprintf("%s%s", "https:", matchedImgTag[3]),
-			Episode:  matchedFooters[idx][1],
+			Episode:  fmt.Sprintf("Episode %s", matchedFooters[idx][1]),
 			Date:     strings.ReplaceAll(matchedFooters[idx][2], "/", "."),
 		})
 	}
@@ -175,8 +176,8 @@ func scraperAnime() (AnimeSchedule, error) {
 	for idx, matchedImgTag := range matchedAnimeInfo {
 		animes = append(animes, AnimeCard{
 			URL:      fmt.Sprintf("%s%s", "https://www.livechart.me/anime/", matchedImgTag[3]),
-			Title:    matchedImgTag[1],
-			ThumbURL: matchedImgTag[2],
+			Title:    strings.ReplaceAll(matchedImgTag[1], "&#39;", "'"),
+			ThumbURL: strings.ReplaceAll(matchedImgTag[2], "small", "large"),
 			Episode:  matchedEPDescriptions[idx][1],
 		})
 	}
