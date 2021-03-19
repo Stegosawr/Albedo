@@ -49,7 +49,7 @@ func TestAddZeroTo2DigitNum(t *testing.T) {
 			numIn:  2,
 			numOut: "02",
 		}, {
-			name:   "OVer",
+			name:   "Over",
 			numIn:  10,
 			numOut: "10",
 		},

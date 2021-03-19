@@ -2,6 +2,8 @@ package command
 
 import (
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"regexp"
 	"strings"
 	"time"
@@ -13,20 +15,17 @@ import (
 
 // AnimeCard = 1 Anime
 type AnimeCard struct {
-	URL        string
-	Title      string
-	ThumbURL   string
-	Episode    string
-	EpisodeURL string
-	Date       string
+	URL      string
+	Title    string
+	ThumbURL string
+	Episode  string
+	Date     string
 }
 
 // AnimeCollection Grouped by day
 type AnimeCollection struct {
-	Date    string
-	IdxFrom int
-	IdxTo   int
-	Animes  []AnimeCard
+	Date   string
+	Animes []AnimeCard
 }
 
 // AnimeSchedule = Days Grouped
@@ -86,101 +85,6 @@ func UpdateAnime(s *discordgo.Session) {
 
 }
 
-func scraperAnime() (AnimeSchedule, error) {
-
-	htmlBody, err := request.Get("https://anidb.net/anime/schedule")
-	if err != nil {
-		return AnimeSchedule{}, fmt.Errorf("%s %s", static.AnimeNewsChannelID, "Can not reach https://anidb.net/anime/schedule")
-	}
-
-	re := regexp.MustCompile("\"(/anime/[0-9]{1,5})")
-	matchedURLs := re.FindAllStringSubmatch(htmlBody, -1)
-
-	re = regexp.MustCompile("aid=[0-9]*\">(.*?)(?: - ([a-zA-Z0-9]*))?<")
-	matchedTitles := re.FindAllStringSubmatch(htmlBody, -1)
-
-	re = regexp.MustCompile("https://cdn-eu.anidb.net/images/[^/]*/[^-]*")
-	ThumbURLs := re.FindAllString(htmlBody, -1)
-
-	re = regexp.MustCompile("/episode/[0-9]*/\\?aid=[0-9]*")
-	EpisodeURLs := re.FindAllString(htmlBody, -1)
-
-	AnimeCards := []AnimeCard{}
-	ep := ""
-	for idx, matchedURL := range matchedURLs {
-		if matchedURL[1] == "" {
-			continue
-		}
-		ep = ""
-		if len(matchedTitles[idx]) == 3 {
-			ep = matchedTitles[idx][2]
-		}
-
-		AnimeCards = append(AnimeCards, AnimeCard{
-			URL:        matchedURL[1],
-			Title:      strings.TrimRight(matchedTitles[idx][1], " -"),
-			ThumbURL:   ThumbURLs[idx],
-			Episode:    ep,
-			EpisodeURL: EpisodeURLs[idx],
-		})
-	}
-
-	re = regexp.MustCompile("[0-9]*-[0-9]*-[0-9]*, [^<]*")
-	dates := re.FindAllString(htmlBody, -1)
-
-	animeSchedule := AnimeSchedule{}
-	datePosition := 0
-	for idx, date := range dates {
-		datePosition = strings.Index(htmlBody, date)
-		if datePosition == -1 {
-			return AnimeSchedule{}, fmt.Errorf("%s %s", static.AnimeNewsChannelID, "Can't group by Date - internal error")
-		}
-
-		animeCollection := AnimeCollection{
-			Date:    date,
-			IdxFrom: datePosition,
-		}
-
-		if idx == 0 {
-			animeCollection.IdxFrom = 0
-		}
-
-		if idx == len(dates)-1 {
-			animeCollection.IdxTo = len(htmlBody)
-		} else {
-			animeCollection.IdxTo = strings.Index(htmlBody, dates[idx+1])
-		}
-
-		animeSchedule.Days = append(animeSchedule.Days, animeCollection)
-	}
-
-	if static.AnimeOfCurrentDay {
-		for _, day := range animeSchedule.Days {
-			if strings.Contains(day.Date, "today") {
-				animeSchedule.Days = []AnimeCollection{day}
-				break
-			}
-		}
-	}
-
-	episodeURLPosition := 0
-	for _, anime := range AnimeCards {
-		episodeURLPosition = strings.LastIndex(htmlBody, anime.URL)
-		if episodeURLPosition == -1 {
-			return AnimeSchedule{}, fmt.Errorf("%s %s", static.AnimeNewsChannelID, "Can't find url position - internal error")
-		}
-
-		for idx, collection := range animeSchedule.Days {
-			if episodeURLPosition > collection.IdxFrom && episodeURLPosition < collection.IdxTo {
-				anime.URL = fmt.Sprintf("%s%s", "https://anidb.net", EpisodeURLs[idx])
-				animeSchedule.Days[idx].Animes = append(animeSchedule.Days[idx].Animes, anime)
-			}
-		}
-
-	}
-	return animeSchedule, nil
-}
-
 func scraperHentai() (AnimeSchedule, error) {
 	now := time.Now()
 
@@ -235,6 +139,54 @@ func scraperHentai() (AnimeSchedule, error) {
 	}
 
 	return animeSchedule, nil
+}
+
+func scraperAnime() (AnimeSchedule, error) {
+	header := map[string]string{
+		"cookie": `preferences=%7B%22time_zone%22%3A%22Europe%2FBerlin%22%2C%22sortby%22%3A%22popularity%22%2C%22titles%22%3A%22romaji%22%2C%22ongoing%22%3A%22all%22%2C%22use_24h_clock%22%3Afalse%2C%22night_mode%22%3Atrue%2C%22reveal_spoilers%22%3Atrue%7D;`,
+	}
+
+	resp, err := request.Request(http.MethodGet, "https://www.livechart.me/timetable", header)
+	if err != nil {
+		return AnimeSchedule{}, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return AnimeSchedule{}, err
+	}
+	htmlString := string(body)
+	today := time.Now()
+	startDate := time.Date(today.Year(), today.Month(), today.Day(), -1, 0, 0, 0, time.UTC).Unix()
+	endDate := time.Date(today.Year(), today.Month(), today.Day()+1, -1, 0, 0, 0, time.UTC).Unix()
+	re := regexp.MustCompile(fmt.Sprintf(`data-timetable-day-start="%d[\s\S]*?%d`, startDate, endDate))
+	matchedDay := re.FindString(htmlString)
+
+	re = regexp.MustCompile(`class="lazy-img".+?alt="([^"]*)".*?"(.+?(\d[^/]*)[^"]*)`)
+	matchedAnimeInfo := re.FindAllStringSubmatch(matchedDay, -1) // 1=Title 2=PosterURL 3=AnimeID
+
+	re = regexp.MustCompile(`</span>([^<]+)</div>`)
+	matchedEPDescriptions := re.FindAllStringSubmatch(matchedDay, -1) // 1=Episode info
+
+	if len(matchedAnimeInfo) != len(matchedEPDescriptions) {
+		return AnimeSchedule{}, fmt.Errorf("Internal Error: found %d anime and %d EP descriptions", len(matchedAnimeInfo), len(matchedEPDescriptions))
+	}
+
+	animes := []AnimeCard{}
+	for idx, matchedImgTag := range matchedAnimeInfo {
+		animes = append(animes, AnimeCard{
+			URL:      fmt.Sprintf("%s%s", "https://www.livechart.me/anime/", matchedImgTag[3]),
+			Title:    matchedImgTag[1],
+			ThumbURL: matchedImgTag[2],
+			Episode:  matchedEPDescriptions[idx][1],
+		})
+	}
+
+	return AnimeSchedule{[]AnimeCollection{
+		{
+			Date:   today.String(),
+			Animes: animes,
+		},
+	}}, nil
 }
 
 func addZeroTo2DigitNum(num int) string {
