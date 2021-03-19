@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/stegosawr/Albedo/command"
@@ -47,8 +48,9 @@ func main() {
 		return
 	}
 
-	/*if _, err := dg.Channel(static.AnimeNewsChannelID); err == nil {
-		t := time.NewTimer(11 * time.Minute)
+	if _, err := dg.Channel(static.AnimeNewsChannelID); err == nil {
+		timeTillInitialRun, _ := time.ParseDuration(fmt.Sprintf("%vh", 27-time.Now().Hour()))
+		t := time.NewTimer(timeTillInitialRun)
 		go func() {
 			for {
 				select {
@@ -58,7 +60,7 @@ func main() {
 				}
 			}
 		}()
-	}*/
+	}
 
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
