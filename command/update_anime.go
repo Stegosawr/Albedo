@@ -157,8 +157,8 @@ func scraperAnime() (AnimeSchedule, error) {
 	}
 	htmlString := string(body)
 	today := time.Now()
-	startDate := time.Date(today.Year(), today.Month(), today.Day(), -1, 0, 0, 0, time.UTC).Unix()
-	endDate := time.Date(today.Year(), today.Month(), today.Day()+1, -1, 0, 0, 0, time.UTC).Unix()
+	startDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location()).Unix()
+	endDate := time.Date(today.Year(), today.Month(), today.Day()+1, 0, 0, 0, 0, today.Location()).Unix()
 	re := regexp.MustCompile(fmt.Sprintf(`data-timetable-day-start="%d[\s\S]*?%d`, startDate, endDate))
 	matchedDay := re.FindString(htmlString)
 
