@@ -89,7 +89,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		command.Help(s, m)
 	case "ping":
 		command.Ping(s, m)
-	case "anime":
+	case "dailyMedia":
 		command.UpdateAnime(s)
 	case "watch anime":
 		s.ChannelMessageSend(m.ChannelID, "https://piracy.moe/")

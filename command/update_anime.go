@@ -1,6 +1,8 @@
 package command
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -9,29 +11,67 @@ import (
 	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/stegosawr/Albedo/request"
 	"github.com/stegosawr/Albedo/static"
 )
 
-// AnimeCard = 1 Anime
-type AnimeCard struct {
-	URL      string
-	Title    string
-	ThumbURL string
-	Episode  string
-	Date     string
+// MediaInfo = 1 Anime,Hentai,Manga
+type MediaInfo struct {
+	URL           string
+	Title         string
+	Description   string
+	Categories    []string
+	ThumbURL      string
+	Episode       string
+	AiringAt      string
+	Type          string
+	AuthorIconURL string
 }
 
-// AnimeCollection Grouped by day
-type AnimeCollection struct {
-	Date   string
-	Animes []AnimeCard
+type tag struct {
+	Name string `json:"name,omitempty"`
 }
 
-// AnimeSchedule = Days Grouped
-type AnimeSchedule struct {
-	Days []AnimeCollection
+type title struct {
+	Romaji  string `json:"romaji,omitempty"`
+	English string `json:"english,omitempty"`
+	Native  string `json:"native,omitempty"`
 }
+
+type media struct {
+	ID          uint32   `json:"id,omitempty"`
+	IsAdult     bool     `json:"isAdult,omitempty"`
+	Title       title    `json:"title,omitempty"`
+	Description string   `json:"description,omitempty"`
+	SiteURL     string   `json:"siteUrl,omitempty"`
+	Genres      []string `json:"genres,omitempty"`
+	Tags        []tag    `json:"tags,omitempty"`
+}
+
+type airingSchedule struct {
+	Media    media  `json:"media,omitempty"`
+	Episode  uint32 `json:"episode,omitempty"`
+	AiringAt int64  `json:"airingAt,omitempty"`
+}
+
+type page struct {
+	AiringSchedules []airingSchedule `json:"airingSchedules,omitempty"`
+}
+
+type data struct {
+	Page page `json:"page"`
+}
+
+type animeAiring struct {
+	Data data `json:"data"`
+}
+
+type graphqlReq struct {
+	Query     string `json:"query"`
+	Variables string `json:"variables"`
+}
+
+const aniListApi = "https://graphql.anilist.co"
+const aniListMediaThumb = "https://img.anili.st/media/"
 
 // UpdateAnime Anime Schedule
 func UpdateAnime(s *discordgo.Session) {
@@ -40,154 +80,164 @@ func UpdateAnime(s *discordgo.Session) {
 
 	_ = DeleteAllMessagesInChannel(s, static.HentaiNewsChannelID)
 
-	animeSchedule, err := scraperAnime()
-	if err != nil {
-		s.ChannelMessageSend(static.AnimeNewsChannelID, err.Error())
-		return
-	}
-	hentaiSchdule, err := scraperHentai()
+	mediaOfToday, err := scraperAnime()
 	if err != nil {
 		s.ChannelMessageSend(static.AnimeNewsChannelID, err.Error())
 		return
 	}
 
-	animeSchedules := []AnimeSchedule{animeSchedule, hentaiSchdule}
-	for idx, schedule := range animeSchedules {
-		channel := static.AnimeNewsChannelID
-		switch idx {
-		case 0:
-			s.ChannelMessageSend(channel, "--------------------------\n  Anime of Today\n--------------------------")
-		case 1:
-			channel = static.HentaiNewsChannelID
-			s.ChannelMessageSend(channel, "--------------------------\n  Hentai of Today\n--------------------------")
-			if len(animeSchedules[idx].Days) == 0 {
-				s.ChannelMessageSend(channel, fmt.Sprintf("No releases today! Check release schedule here %s", fmt.Sprintf("https://www.underhentai.net/releases-%d/", time.Now().Year())))
-			}
-		}
-		for _, day := range schedule.Days {
-			for _, a := range day.Animes {
-				time.Sleep(5 * time.Second)
-				_, err = s.ChannelMessageSendEmbed(channel, &discordgo.MessageEmbed{
-					URL:         a.URL,
-					Title:       a.Title,
-					Description: a.Episode,
-					Image: &discordgo.MessageEmbedImage{
-						URL: a.ThumbURL,
-					},
-				})
-				//s.ChannelMessageSend(channel, a.ThumbURL)
-				if err != nil {
-					fmt.Println(err)
-				}
-			}
+	//s.ChannelMessageSend(static.AnimeNewsChannelID, "--------------------------\n  Anime of Today\n--------------------------")
+	//s.ChannelMessageSend(static.HentaiNewsChannelID, "--------------------------\n  Hentai of Today\n--------------------------")
+	hasAdult := false
+	for _, v := range mediaOfToday {
+		if v.Type == "Hentai" {
+			hasAdult = true
 			break
 		}
 	}
 
+	if hasAdult {
+		s.ChannelMessageSend(static.HentaiNewsChannelID, fmt.Sprintf("No releases today! Check release schedule here %s", fmt.Sprintf("https://www.underhentai.net/releases-%d/", time.Now().Year())))
+	}
+
+	channel := static.AnimeNewsChannelID
+	for _, m := range mediaOfToday {
+		switch m.Type {
+		case "Anime":
+			channel = static.AnimeNewsChannelID
+		case "Hentai":
+			channel = static.HentaiNewsChannelID
+		}
+		time.Sleep(5 * time.Second)
+		_, err = s.ChannelMessageSendEmbed(channel, &discordgo.MessageEmbed{
+			URL:         m.URL,
+			Title:       m.Title,
+			Description: appendStringSeq("\n", m.Description, appendStringSeq(",", m.Categories...)),
+			Image: &discordgo.MessageEmbedImage{
+				URL: m.ThumbURL,
+			},
+			Footer: &discordgo.MessageEmbedFooter{
+				Text:    appendStringSeq(" - ", m.Type, m.Episode, m.AiringAt),
+				IconURL: m.AuthorIconURL,
+			},
+		})
+		//s.ChannelMessageSend(channel, m.ThumbURL)
+	}
+
 }
 
-func scraperHentai() (AnimeSchedule, error) {
-	now := time.Now()
-
-	htmlBody, err := request.Get(fmt.Sprintf("https://www.underhentai.net/releases-%d/", now.Year()))
-	if err != nil {
-		return AnimeSchedule{}, fmt.Errorf("%s %s", static.AnimeNewsChannelID, "Can not reach https://anidb.net/anime/schedule")
-	}
-
-	re := regexp.MustCompile("\"article-section[^<]*\\s*<[^\"]*\"([^\"]*)\"\\s*[^\"]*\"([^\"]*)[^/]*([^\"]*)")
-	matchedImgTag := re.FindAllStringSubmatch(htmlBody, -1) // 1=url 2=title 3=imgUrl
-
-	re = regexp.MustCompile("article-footer>[^:]*:\\s?([0-9]*)[^:]*:\\s?([^<]*)")
-	matchedFooters := re.FindAllStringSubmatch(htmlBody, -1) // 1=epNo 2=releaseDate
-
-	animes := []AnimeCard{}
-	for idx, matchedImgTag := range matchedImgTag {
-		animes = append(animes, AnimeCard{
-			URL:      fmt.Sprintf("%s%s", "https://www.underhentai.net", matchedImgTag[1]),
-			Title:    matchedImgTag[2],
-			ThumbURL: fmt.Sprintf("%s%s", "https:", matchedImgTag[3]),
-			Episode:  fmt.Sprintf("Episode %s", matchedFooters[idx][1]),
-			Date:     strings.ReplaceAll(matchedFooters[idx][2], "/", "."),
-		})
-	}
-
-	dates := []string{}
-	for key := range matchedFooters {
-		dates = append(dates, matchedFooters[key][2])
-	}
-
-	dates = removeDuplicatesUnordered(dates)
-
-	animeCollection := []AnimeCollection{}
-	for _, date := range dates {
-		foramttedDate := strings.ReplaceAll(date, "/", ".")
-		realDate := fmt.Sprintf("%s.%s.%s", addZeroTo2DigitNum(now.Day()), addZeroTo2DigitNum(int(now.Month())), addZeroTo2DigitNum(now.Year()))
-		if realDate != foramttedDate && static.AnimeOfCurrentDay {
-			continue
-		}
-		animeCollection = append(animeCollection, AnimeCollection{
-			Date: foramttedDate,
-		})
-	}
-
-	animeSchedule := AnimeSchedule{Days: animeCollection}
-	for _, anime := range animes {
-		for idx, collection := range animeSchedule.Days {
-			if anime.Date == collection.Date {
-				animeSchedule.Days[idx].Animes = append(animeSchedule.Days[idx].Animes, anime)
-			}
-		}
-	}
-
-	return animeSchedule, nil
-}
-
-func scraperAnime() (AnimeSchedule, error) {
-	header := map[string]string{
-		"cookie": `preferences=%7B%22time_zone%22%3A%22Europe%2FBerlin%22%2C%22sortby%22%3A%22popularity%22%2C%22titles%22%3A%22romaji%22%2C%22ongoing%22%3A%22all%22%2C%22use_24h_clock%22%3Afalse%2C%22night_mode%22%3Atrue%2C%22reveal_spoilers%22%3Atrue%7D;`,
-	}
-
-	resp, err := request.Request(http.MethodGet, "https://www.livechart.me/timetable", header)
-	if err != nil {
-		return AnimeSchedule{}, err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return AnimeSchedule{}, err
-	}
-	htmlString := string(body)
+func scraperAnime() ([]MediaInfo, error) {
+	//today := time.Date(2021, 5, 27, 1, 10, 10, 0, time.FixedZone("CEST", 2*60*60))
 	today := time.Now()
 	startDate := time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location()).Unix()
 	endDate := time.Date(today.Year(), today.Month(), today.Day()+1, 0, 0, 0, 0, today.Location()).Unix()
-	re := regexp.MustCompile(fmt.Sprintf(`data-timetable-day-start="%d[\s\S]*?%d`, startDate, endDate))
-	matchedDay := re.FindString(htmlString)
 
-	re = regexp.MustCompile(`class="lazy-img".+?alt="([^"]*)".*?"(.+?(\d[^/]*)[^"]*)`)
-	matchedAnimeInfo := re.FindAllStringSubmatch(matchedDay, -1) // 1=Title 2=PosterURL 3=AnimeID
+	query := `
+	query($airingAt_greater: Int, $airingAt_lesser: Int){
+		Page(page: 1) {
+		  airingSchedules(airingAt_greater: $airingAt_greater, airingAt_lesser: $airingAt_lesser, sort: TIME) {
+			media {
+			  id
+			  isAdult
+			  title {
+				romaji
+				english
+				native
+			  }
+			  description
+			  siteUrl
+			  coverImage{
+				color
+			  }
+			  genres
+			  tags{name}
+			}
+			airingAt
+			episode
+		  }
+		}
+	}	  
+	`
 
-	re = regexp.MustCompile(`</span>([^<]+)</div>`)
-	matchedEPDescriptions := re.FindAllStringSubmatch(matchedDay, -1) // 1=Episode info
+	variables := fmt.Sprintf("{ \"airingAt_greater\": %d, \"airingAt_lesser\": %d }", startDate, endDate)
 
-	if len(matchedAnimeInfo) != len(matchedEPDescriptions) {
-		return AnimeSchedule{}, fmt.Errorf("Internal Error: found %d anime and %d EP descriptions", len(matchedAnimeInfo), len(matchedEPDescriptions))
+	graphqlBody := &graphqlReq{Query: query, Variables: variables}
+	reqBody, err := json.Marshal(graphqlBody)
+	if err != nil {
+		return nil, err
 	}
 
-	animes := []AnimeCard{}
-	for idx, matchedImgTag := range matchedAnimeInfo {
-		animes = append(animes, AnimeCard{
-			URL:      fmt.Sprintf("%s%s", "https://www.livechart.me/anime/", matchedImgTag[3]),
-			Title:    strings.ReplaceAll(matchedImgTag[1], "&#39;", "'"),
-			ThumbURL: strings.ReplaceAll(matchedImgTag[2], "small", "large"),
-			Episode:  matchedEPDescriptions[idx][1],
+	jsonRes, err := http.Post(aniListApi, "application/json", bytes.NewReader(reqBody))
+	if err != nil {
+		return nil, err
+	}
+	defer jsonRes.Body.Close()
+
+	resBody, err := ioutil.ReadAll(jsonRes.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	airingAnime := &animeAiring{}
+	err = json.Unmarshal(resBody, &airingAnime)
+	if err != nil {
+		return nil, err
+	}
+
+	animes := []MediaInfo{}
+	for _, schedule := range airingAnime.Data.Page.AiringSchedules {
+		mediaType := "Anime"
+		if schedule.Media.IsAdult {
+			mediaType = "Hentai"
+		}
+
+		t := time.Unix(schedule.AiringAt, 0)
+
+		title := schedule.Media.Title.Romaji
+		if schedule.Media.Title.English != "" {
+			title = title + " / " + schedule.Media.Title.English
+		}
+		if schedule.Media.Title.Native != "" {
+			title = title + " / " + schedule.Media.Title.Native
+		}
+
+		zone, offset := t.Zone()
+
+		//fix description
+		re := regexp.MustCompile(`</?[ib]>`)
+		schedule.Media.Description = re.ReplaceAllString(schedule.Media.Description, "")
+		firstHtmlTag := strings.Index(schedule.Media.Description, "<")
+		if firstHtmlTag == -1 {
+			firstHtmlTag = len(schedule.Media.Description)
+		}
+		schedule.Media.Description = schedule.Media.Description[:firstHtmlTag] + fmt.Sprintf("[(read more)](%s)", schedule.Media.SiteURL)
+
+		categories := []string{}
+		switch mediaType {
+		case "Anime":
+			categories = wrappStringIn("***", schedule.Media.Genres...)
+		case "Hentai":
+		}
+		if mediaType == "Hentai" {
+			for _, tag := range schedule.Media.Tags {
+				categories = append(categories, wrappStringIn("***", tag.Name)...)
+			}
+		}
+
+		animes = append(animes, MediaInfo{
+			URL:           schedule.Media.SiteURL,
+			Title:         title,
+			Description:   schedule.Media.Description,
+			Categories:    categories,
+			Episode:       "Episode " + fmt.Sprint(schedule.Episode),
+			ThumbURL:      fmt.Sprintf("%s%d", aniListMediaThumb, schedule.Media.ID),
+			AiringAt:      fmt.Sprintf("Airing at %s %s+%d", t.Local().Format("15:04:05"), zone, offset/60/60),
+			Type:          mediaType,
+			AuthorIconURL: "https://anilist.co/img/icons/favicon-32x32.png",
 		})
 	}
 
-	return AnimeSchedule{[]AnimeCollection{
-		{
-			Date:   today.String(),
-			Animes: animes,
-		},
-	}}, nil
+	return animes, nil
 }
 
 func addZeroTo2DigitNum(num int) string {
@@ -211,4 +261,24 @@ func removeDuplicatesUnordered(elements []string) []string {
 		result = append(result, key)
 	}
 	return result
+}
+
+func appendStringSeq(sep string, pieces ...string) string {
+	out := ""
+	for _, piece := range pieces {
+		if out == "" {
+			out = piece
+			continue
+		}
+		out = out + sep + piece
+	}
+	return out
+}
+
+func wrappStringIn(c string, elements ...string) []string {
+	out := []string{}
+	for _, elem := range elements {
+		out = append(out, c+elem+c)
+	}
+	return out
 }
