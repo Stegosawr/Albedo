@@ -96,7 +96,7 @@ func UpdateAnime(s *discordgo.Session) {
 		}
 	}
 
-	if hasAdult {
+	if !hasAdult {
 		s.ChannelMessageSend(static.HentaiNewsChannelID, fmt.Sprintf("No releases today! Check release schedule here %s", fmt.Sprintf("https://www.underhentai.net/releases-%d/", time.Now().Year())))
 	}
 
