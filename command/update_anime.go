@@ -109,7 +109,7 @@ func UpdateAnime(s *discordgo.Session) {
 			channel = static.HentaiNewsChannelID
 		}
 		time.Sleep(5 * time.Second)
-		_, err = s.ChannelMessageSendEmbed(channel, &discordgo.MessageEmbed{
+		s.ChannelMessageSendEmbed(channel, &discordgo.MessageEmbed{
 			URL:         m.URL,
 			Title:       m.Title,
 			Description: appendStringSeq("\n", m.Description, appendStringSeq(",", m.Categories...)),

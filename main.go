@@ -78,11 +78,33 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// Ignore all messages created by the bot itself
 	// This isn't required in this specific example but it's a good practice.
-	if m.Author.ID == s.State.User.ID || !strings.HasPrefix(m.Content, static.Prefix) || m.Content == static.Prefix {
+	if m.Author.ID == s.State.User.ID {
 		return
 	}
 
-	re := regexp.MustCompile("[0-9]{5,6}")
+	regexList := map[string]*regexp.Regexp{
+		"amiami":  regexp.MustCompile(`https://www.amiami.com/.+scode=[\w-]+`),
+		"nhentai": regexp.MustCompile(`^\+?[0-9]{5,6}`),
+	}
+
+	for k, v := range regexList {
+		matchedRegex := v.FindString(m.Content)
+		if len(matchedRegex) < 1 {
+			continue
+		}
+
+		switch k {
+		case "amiami":
+			command.FigureShow(s, m)
+		case "nhentai":
+			command.NhentaiShow(s, m)
+		}
+		break
+	}
+
+	if !strings.HasPrefix(m.Content, static.Prefix) || m.Content == static.Prefix {
+		return
+	}
 
 	switch strings.TrimPrefix(m.Content, static.Prefix) {
 	case "help":
@@ -95,7 +117,5 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, "https://piracy.moe/")
 	case "delmsg":
 		command.DeleteAllMessagesInChannel(s, m.ChannelID)
-	case re.FindString(m.Content):
-		command.NhentaiShow(s, m)
 	}
 }
