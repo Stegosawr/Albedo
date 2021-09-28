@@ -83,7 +83,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	regexList := map[string]*regexp.Regexp{
-		"amiami":  regexp.MustCompile(`https://www.amiami.com/.+scode=[\w-]+`),
+		"amiami":  regexp.MustCompile(`https://www.amiami.com/.+[gs]code=[\w-]+`),
 		"nhentai": regexp.MustCompile(`^\+?[0-9]{5,6}`),
 	}
 
