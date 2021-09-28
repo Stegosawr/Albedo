@@ -11,7 +11,7 @@ import (
 const site = "https://amiami.com"
 const imgSite = "https://img.amiami.com/"
 
-var reFigureCode = regexp.MustCompile(`https://www\.amiami\.com/.+scode=([\w-]+)`)
+var reFigureCode = regexp.MustCompile(`https://www\.amiami\.com/.+[sg]code=([\w-]+)`)
 
 func FigureShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 
