@@ -30,7 +30,7 @@ func FigureShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 		s.ChannelMessageSend(m.ChannelID, "apiapi failed: "+err.Error())
 	}
 
-	price := fmt.Sprintf("__%d__", details.Item.CPriceTaxed)
+	price := fmt.Sprintf("__%d__ JPY", details.Item.CPriceTaxed)
 	if details.Item.CPriceTaxed > details.Item.Price {
 		price = fmt.Sprintf("~~%d~~ -> __%d__ JPY | You save %d JPY", details.Item.CPriceTaxed, details.Item.Price, details.Item.CPriceTaxed-details.Item.Price)
 	}
