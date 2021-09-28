@@ -1,5 +1,5 @@
-github.com/Stegosawr/apiapi v0.0.0-20210928143200-8bfbc929be97 h1:bfudHc9iZhb2LwXpOrrwZ1Xp4MB3zZ2i35DxYEPfuo0=
-github.com/Stegosawr/apiapi v0.0.0-20210928143200-8bfbc929be97/go.mod h1:i9C+lB+qTEMx4GUH6VNfroMALkh3t4En547PnRiIEso=
+github.com/Stegosawr/apiapi v0.0.0-20210928170716-ab7dac50467b h1:thmv5AMGnazIJ7+OVUZ92b7R13L5PRp192ou0gKqlaI=
+github.com/Stegosawr/apiapi v0.0.0-20210928170716-ab7dac50467b/go.mod h1:i9C+lB+qTEMx4GUH6VNfroMALkh3t4En547PnRiIEso=
 github.com/bwmarrin/discordgo v0.23.2 h1:BzrtTktixGHIu9Tt7dEE6diysEF9HWnXeHuoJEt2fH4=
 github.com/bwmarrin/discordgo v0.23.2/go.mod h1:c1WtWUGN6nREDmzIpyTp/iD3VYt4Fpx+bVyfBG7JE+M=
 github.com/gorilla/websocket v1.4.0/go.mod h1:E7qHFY5m1UJ88s3WnNqhKjPHQ0heANvMoAMk2YaljkQ=

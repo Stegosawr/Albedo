@@ -11,11 +11,21 @@ import (
 const site = "https://amiami.com"
 const imgSite = "https://img.amiami.com/"
 
-var reFigureCode = regexp.MustCompile(`https://www\.amiami\.com/.+[sg]code=([\w-]+)`)
+var reFigureCode = regexp.MustCompile(`https://www\.amiami\.com/.+([sg])code=([\w-]+)`)
 
 func FigureShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 
-	details, err := apiapi.GetItemBySCode(reFigureCode.FindStringSubmatch(m.Content)[1])
+	matchedURL := reFigureCode.FindStringSubmatch(m.Content)
+	if len(matchedURL) < 1 {
+		s.ChannelMessageSend(m.ChannelID, "apiapi failed cannot parse CodeType and/or GCode")
+	}
+
+	codeType := apiapi.CodeTypeG
+	if matchedURL[1] == "s" {
+		codeType = apiapi.CodeTypeS
+	}
+
+	details, err := apiapi.GetItemByCode(codeType, matchedURL[2])
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, "apiapi failed: "+err.Error())
 	}
