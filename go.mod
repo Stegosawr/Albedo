@@ -3,7 +3,7 @@ module github.com/stegosawr/Albedo
 go 1.17
 
 require (
-	github.com/Stegosawr/apiapi v0.0.0-20210928170716-ab7dac50467b
+	github.com/Stegosawr/apiapi v0.0.0-20210929151256-7d3e136ce50c
 	github.com/bwmarrin/discordgo v0.23.2
 )
 

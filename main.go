@@ -37,9 +37,10 @@ func main() {
 
 	// Register the messageCreate func as a callback for MessageCreate events.
 	dg.AddHandler(messageCreate)
+	dg.AddHandler(messageReactionAdd)
 
 	// In this example, we only care about receiving message events.
-	dg.Identify.Intents = discordgo.IntentsGuildMessages
+	dg.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsGuildMessageReactions
 
 	// Open a websocket connection to Discord and begin listening.
 	err = dg.Open()
@@ -118,4 +119,21 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "delmsg":
 		command.DeleteAllMessagesInChannel(s, m.ChannelID)
 	}
+}
+
+func messageReactionAdd(s *discordgo.Session, mra *discordgo.MessageReactionAdd) {
+
+	//ignore bot reactions
+	if mra.UserID == s.State.User.ID {
+		return
+	}
+
+	//only do somthing if it matches these emotes
+	switch mra.Emoji.Name {
+	case "💵", "💴", "💶", "💷":
+		command.ConvertCurrencies(s, mra)
+	default:
+		return
+	}
+
 }
