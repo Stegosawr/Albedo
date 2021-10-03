@@ -107,6 +107,9 @@ func ConvertCurrencies(s *discordgo.Session, mra *discordgo.MessageReactionAdd) 
 		s.ChannelMessageSend(mra.ChannelID, "currency conversion failed: "+err.Error())
 	}
 
+	// remove the users reaction
+	s.MessageReactionRemove(mra.ChannelID, mra.MessageID, mra.Emoji.Name, mra.UserID)
+
 	contentToConvert := reCurrencies.FindAllStringSubmatch(msg.Content, -1)
 	if len(contentToConvert) > 0 {
 		newContent := convertCurr(msg.Content, contentToConvert[0][3], mra.Emoji.Name)
