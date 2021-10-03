@@ -132,6 +132,9 @@ func messageReactionAdd(s *discordgo.Session, mra *discordgo.MessageReactionAdd)
 	switch mra.Emoji.Name {
 	case "💵", "💴", "💶", "💷":
 		command.ConvertCurrencies(s, mra)
+	case "⬅️", "➡️":
+		command.GetNextImage(s, mra)
+		return
 	default:
 		return
 	}
