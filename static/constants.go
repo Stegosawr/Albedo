@@ -16,7 +16,11 @@ var Commands = map[string]Command{
 		SpecialPermissions: "None",
 	},
 	"ping": {
-		Description:        "Send 'Pong!' back to the user ",
+		Description:        "Send 'Pong!' back to the user",
+		SpecialPermissions: "None",
+	},
+	"animeSites": {
+		Description:        "Links the site https://piracy.moe as an anime streaming site index to the user",
 		SpecialPermissions: "None",
 	},
 	"nhentai": {

@@ -89,7 +89,6 @@ func FigureShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 	s.MessageReactionAdd(m.ChannelID, msg.ID, "⬅️")
 	s.MessageReactionAdd(m.ChannelID, msg.ID, "➡️")
 	s.MessageReactionAdd(m.ChannelID, msg.ID, "💶")
-	s.MessageReactionAdd(m.ChannelID, msg.ID, "💶")
 	s.MessageReactionAdd(m.ChannelID, msg.ID, "💴")
 	s.MessageReactionAdd(m.ChannelID, msg.ID, "💵")
 	s.MessageReactionAdd(m.ChannelID, msg.ID, "💷")

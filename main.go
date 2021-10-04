@@ -114,7 +114,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		command.Ping(s, m)
 	case "dailyMedia":
 		command.UpdateAnime(s)
-	case "watch anime":
+	case "animeSites":
 		s.ChannelMessageSend(m.ChannelID, "https://piracy.moe/")
 	case "delmsg":
 		command.DeleteAllMessagesInChannel(s, m.ChannelID)
