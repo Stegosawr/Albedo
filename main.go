@@ -116,7 +116,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		command.UpdateAnime(s)
 	case "animeSites":
 		s.ChannelMessageSend(m.ChannelID, "https://piracy.moe/")
-	case "bestRelease":
+	case "bestReleases":
 		s.ChannelMessageSend(m.ChannelID, "https://releases.moe/")
 	case "delmsg":
 		command.DeleteAllMessagesInChannel(s, m.ChannelID)
