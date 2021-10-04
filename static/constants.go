@@ -20,11 +20,11 @@ var Commands = map[string]Command{
 		SpecialPermissions: "None",
 	},
 	"animeSites": {
-		Description:        "Links the site https://piracy.moe as an anime streaming site index to the user",
+		Description:        "Links the site https://piracy.moe as an anime streaming site index",
 		SpecialPermissions: "None",
 	},
 	"bestReleases": {
-		Description:        "Links the site https://releases.moe as an overview site for best anime torrents to the user",
+		Description:        "Links the site https://releases.moe as an overview site for best anime torrents",
 		SpecialPermissions: "None",
 	},
 	"nhentai": {
