@@ -66,7 +66,7 @@ func main() {
 	// Wait here until CTRL-C or other term signal is received.
 	fmt.Println("Bot is now running.  Press CTRL-C to exit.")
 	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
 	<-sc
 
 	// Cleanly close down the Discord session.
@@ -116,6 +116,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		command.UpdateAnime(s)
 	case "animeSites":
 		s.ChannelMessageSend(m.ChannelID, "https://piracy.moe/")
+	case "bestRelease":
+		s.ChannelMessageSend(m.ChannelID, "https://releases.moe/")
 	case "delmsg":
 		command.DeleteAllMessagesInChannel(s, m.ChannelID)
 	}

@@ -23,6 +23,10 @@ var Commands = map[string]Command{
 		Description:        "Links the site https://piracy.moe as an anime streaming site index to the user",
 		SpecialPermissions: "None",
 	},
+	"bestReleases": {
+		Description:        "Links the site https://releases.moe as an overview site for best anime torrents to the user",
+		SpecialPermissions: "None",
+	},
 	"nhentai": {
 		Description:        fmt.Sprintf("%s123456 or %s12345 returns the complete link to the nhentai page", Prefix, Prefix),
 		SpecialPermissions: "None",
