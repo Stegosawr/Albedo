@@ -68,7 +68,7 @@ func FigureShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 			URL: imgSite + details.Item.MainImageURL,
 		},
 		Footer: &discordgo.MessageEmbedFooter{
-			Text:    fmt.Sprintf("made by %s - Stock: %d - Images: 1/%d", details.Item.MakerName, details.Item.Stock, details.Item.ImageReviewnumber),
+			Text:    fmt.Sprintf("made by %s - Stock: %d - Images: 1/%d", details.Item.MakerName, details.Item.Stock, details.Item.ImageReviewnumber+1), // account for the main img
 			IconURL: "https://www.amiami.com/favicon.png",
 		},
 		Fields: []*discordgo.MessageEmbedField{
