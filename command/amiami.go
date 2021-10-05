@@ -232,7 +232,7 @@ func GetNextImage(s *discordgo.Session, mra *discordgo.MessageReactionAdd) {
 		return
 	}
 
-	imgURLs := []string{strings.TrimPrefix(msg.Embeds[0].Image.URL, imgSite)}
+	imgURLs := []string{fmt.Sprintf("/images/product/main/%s/%s.%s", mainImgInfos[1], mainImgInfos[2], mainImgInfos[3])}
 	for i := 1; numbImages > i; i++ {
 		imgURLs = append(imgURLs, fmt.Sprintf("/images/product/review/%s/%s_%02d.%s", mainImgInfos[1], mainImgInfos[2], i, mainImgInfos[3]))
 	}
