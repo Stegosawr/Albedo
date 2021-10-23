@@ -13,7 +13,7 @@ import (
 const site = "https://amiami.com"
 const imgSite = "https://img.amiami.com"
 
-var reFigureCode = regexp.MustCompile(`https://www\.amiami\.com/.+([sg])code=([\w-]+)`)
+var reFigureCode = regexp.MustCompile(`https://www\.amiami\.(?:com|jp)/.+([sg])code=([\w-]+)`)
 var reCurrencies = regexp.MustCompile(`([\d,.]+)(__|~~)? ([A-Z]{3})`)
 
 var currencies = map[string]string{
