@@ -23,12 +23,17 @@ func DakiShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	imageURL := product.NSFWImage
+	if imageURL == "" {
+		imageURL = product.MainImage
+	}
+
 	msg, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
 		URL:         product.URL,
 		Title:       product.Name,
 		Description: product.Description,
 		Image: &discordgo.MessageEmbedImage{
-			URL: product.MainImage,
+			URL: imageURL,
 		},
 		Footer: &discordgo.MessageEmbedFooter{
 			Text:    fmt.Sprintf("SKU: %d", product.Sku),
