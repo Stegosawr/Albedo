@@ -2,12 +2,21 @@ package command
 
 import (
 	"fmt"
+	"regexp"
 
 	"github.com/bwmarrin/discordgo"
 	octopusapi "github.com/gan-of-culture/octopus-api"
 )
 
+var reProductURL = regexp.MustCompile(`https://cuddlyoctopus.com/product/[^/]+`)
+
 func DakiShow(s *discordgo.Session, m *discordgo.MessageCreate) {
+	matchedURL := reProductURL.FindString(m.Content)
+	if matchedURL == "" {
+		s.ChannelMessageSend(m.ChannelID, "invalid dakimakura URL")
+		return
+	}
+
 	product, err := octopusapi.GetProductByURL(m.Content)
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, err.Error())
