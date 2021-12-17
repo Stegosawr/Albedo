@@ -17,7 +17,7 @@ func DakiShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	product, err := octopusapi.GetProductByURL(m.Content)
+	product, err := octopusapi.GetProductByURL(matchedURL)
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, err.Error())
 		return
