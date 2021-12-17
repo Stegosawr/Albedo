@@ -84,8 +84,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	regexList := map[string]*regexp.Regexp{
-		"amiami":  regexp.MustCompile(`https://www.amiami.(?:com|jp)/.+[gs]code=[\w-]+`),
-		"nhentai": regexp.MustCompile(`^\+?[0-9]{5,6}`),
+		"amiami":        regexp.MustCompile(`https://www.amiami.(?:com|jp)/.+[gs]code=[\w-]+`),
+		"cuddlyoctopus": regexp.MustCompile(`https://cuddlyoctopus.com/product/[^/]+`),
+		"nhentai":       regexp.MustCompile(`^\+?[0-9]{5,6}`),
 	}
 
 	for k, v := range regexList {
@@ -97,6 +98,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		switch k {
 		case "amiami":
 			command.FigureShow(s, m)
+		case "cuddlyoctopus":
+			command.DakiShow(s, m)
 		case "nhentai":
 			command.NhentaiShow(s, m)
 		}

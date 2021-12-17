@@ -10,7 +10,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
-const site = "https://amiami.com"
 const imgSite = "https://img.amiami.com"
 
 var reFigureCode = regexp.MustCompile(`https://www\.amiami\.(?:com|jp)/.+([sg])code=([\w-]+)`)
@@ -30,6 +29,7 @@ func FigureShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 	matchedURL := reFigureCode.FindStringSubmatch(m.Content)
 	if len(matchedURL) < 1 {
 		s.ChannelMessageSend(m.ChannelID, "apiapi failed cannot parse CodeType and/or GCode")
+		return
 	}
 
 	codeType := apiapi.CodeTypeG
@@ -40,6 +40,7 @@ func FigureShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 	details, err := apiapi.GetItemByCode(codeType, matchedURL[2])
 	if err != nil {
 		s.ChannelMessageSend(m.ChannelID, "apiapi failed: "+err.Error())
+		return
 	}
 
 	if details.Item.CPriceTaxed == 0 {
