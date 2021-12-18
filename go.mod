@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/Stegosawr/apiapi v0.0.0-20210929151256-7d3e136ce50c
 	github.com/bwmarrin/discordgo v0.23.2
-	github.com/gan-of-culture/octopus-api v0.0.0-20211218212345-e8dbcb860bda
+	github.com/gan-of-culture/octopus-api v0.0.0-20211218220856-fdbb8ca6dabf
 )
 
 require (
