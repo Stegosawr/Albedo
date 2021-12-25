@@ -1,5 +1,7 @@
 github.com/Stegosawr/apiapi v0.0.0-20210929151256-7d3e136ce50c h1:ripUeCK0OyMk7q5KgC9XMHUVIyDY0Q9sSkMLcCplt+E=
 github.com/Stegosawr/apiapi v0.0.0-20210929151256-7d3e136ce50c/go.mod h1:i9C+lB+qTEMx4GUH6VNfroMALkh3t4En547PnRiIEso=
+github.com/Stegosawr/currency v0.0.0-20211030231643-8e81d57900f4 h1:qXL9ZQ1j1TRBhI9mlrh6LhErMKAf3a/VmKJ1mEHGrRQ=
+github.com/Stegosawr/currency v0.0.0-20211030231643-8e81d57900f4/go.mod h1:sZCJ2UJsH5uV3vanmKDnFW5bnLoqo5F3i6DIbLKgd88=
 github.com/bwmarrin/discordgo v0.23.2 h1:BzrtTktixGHIu9Tt7dEE6diysEF9HWnXeHuoJEt2fH4=
 github.com/bwmarrin/discordgo v0.23.2/go.mod h1:c1WtWUGN6nREDmzIpyTp/iD3VYt4Fpx+bVyfBG7JE+M=
 github.com/gan-of-culture/octopus-api v0.0.0-20211218220856-fdbb8ca6dabf h1:10jYEMBQctcNgB7wHBk0TQ2tyaGlRZ6ko7djO1w4h9k=

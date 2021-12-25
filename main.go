@@ -12,6 +12,8 @@ import (
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/stegosawr/Albedo/command"
+	"github.com/stegosawr/Albedo/embed"
+	"github.com/stegosawr/Albedo/reactions"
 	"github.com/stegosawr/Albedo/static"
 )
 
@@ -21,7 +23,6 @@ var (
 )
 
 func init() {
-
 	flag.StringVar(&Token, "t", "", "Bot Token")
 	flag.Parse()
 }
@@ -54,11 +55,9 @@ func main() {
 		t := time.NewTimer(timeTillInitialRun)
 		go func() {
 			for {
-				select {
-				case <-t.C:
-					t.Reset(24 * time.Hour)
-					command.UpdateAnime(dg)
-				}
+				<-t.C
+				t.Reset(24 * time.Hour)
+				command.UpdateAnime(dg)
 			}
 		}()
 	}
@@ -84,9 +83,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	regexList := map[string]*regexp.Regexp{
-		"amiami":        regexp.MustCompile(`https://www.amiami.(?:com|jp)/.+[gs]code=[\w-]+`),
-		"cuddlyoctopus": regexp.MustCompile(`https://cuddlyoctopus.com/product/[^/]+`),
-		"nhentai":       regexp.MustCompile(`^\+?[0-9]{5,6}`),
+		static.AmiAmi:        regexp.MustCompile(`https://www.amiami.(?:com|jp)/.+[gs]code=[\w-]+`),
+		static.CuddlyOctopus: regexp.MustCompile(`https://cuddlyoctopus.com/product/[^/]+`),
+		static.NHentai:       regexp.MustCompile(`^\+?[0-9]{5,6}`),
 	}
 
 	for k, v := range regexList {
@@ -95,14 +94,29 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			continue
 		}
 
-		switch k {
-		case "amiami":
-			command.FigureShow(s, m)
-		case "cuddlyoctopus":
-			command.DakiShow(s, m)
-		case "nhentai":
-			command.NhentaiShow(s, m)
+		embed, err := embed.Embed(s, m, k)
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, err.Error())
+			break
 		}
+		msg, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+		if err != nil {
+			s.ChannelMessageSend(m.ChannelID, err.Error())
+			break
+		}
+
+		if k == static.AmiAmi {
+			s.MessageReactionAdd(m.ChannelID, msg.ID, "⬅️")
+			s.MessageReactionAdd(m.ChannelID, msg.ID, "➡️")
+		}
+
+		if k == static.AmiAmi || k == static.CuddlyOctopus {
+			s.MessageReactionAdd(m.ChannelID, msg.ID, "💶")
+			s.MessageReactionAdd(m.ChannelID, msg.ID, "💴")
+			s.MessageReactionAdd(m.ChannelID, msg.ID, "💵")
+			s.MessageReactionAdd(m.ChannelID, msg.ID, "💷")
+		}
+
 		break
 	}
 
@@ -133,15 +147,10 @@ func messageReactionAdd(s *discordgo.Session, mra *discordgo.MessageReactionAdd)
 		return
 	}
 
-	//only do somthing if it matches these emotes
-	switch mra.Emoji.Name {
-	case "💵", "💴", "💶", "💷":
-		command.ConvertCurrencies(s, mra)
-	case "⬅️", "➡️":
-		command.GetNextImage(s, mra)
-		return
-	default:
-		return
+	// pass data to the correct handlers
+	err := reactions.Process(s, mra)
+	if err != nil {
+		s.ChannelMessageSend(mra.ChannelID, err.Error())
 	}
 
 }

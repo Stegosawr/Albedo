@@ -44,3 +44,12 @@ const Prefix = "+"
 
 // AnimeOfCurrentDay y or n
 const AnimeOfCurrentDay = true
+
+const (
+	// AmiAmi keyword for amiami.com
+	AmiAmi = "amiami"
+	// CuddlyOctopus keyword for cuddlyoctopus.com
+	CuddlyOctopus = "cuddlyoctopus"
+	// NHentai keyword for nhentai.net
+	NHentai = "nhentai"
+)

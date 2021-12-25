@@ -1,26 +1,35 @@
-package command
+package cuddlyoctopus
 
 import (
+	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"github.com/bwmarrin/discordgo"
 	octopusapi "github.com/gan-of-culture/octopus-api"
+	"github.com/stegosawr/Albedo/static"
 )
 
 var reProductURL = regexp.MustCompile(`https://cuddlyoctopus.com/product/[^/]+`)
 
-func DakiShow(s *discordgo.Session, m *discordgo.MessageCreate) {
+type embeder struct{}
+
+// New cuddlyoctopus embeder
+func New() static.Embeder {
+	return &embeder{}
+}
+
+// Embed from message content
+func (e *embeder) Embed(s *discordgo.Session, m *discordgo.MessageCreate) (*discordgo.MessageEmbed, error) {
 	matchedURL := reProductURL.FindString(m.Content)
 	if matchedURL == "" {
-		s.ChannelMessageSend(m.ChannelID, "invalid dakimakura URL")
-		return
+		return nil, errors.New("invalid cuddlyoctopus URL")
 	}
 
 	product, err := octopusapi.GetProductByURL(matchedURL)
 	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, err.Error())
-		return
+		return nil, err
 	}
 
 	imageURL := product.NSFWImage
@@ -28,12 +37,21 @@ func DakiShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 		imageURL = product.MainImage
 	}
 
-	msg, err := s.ChannelMessageSendEmbed(m.ChannelID, &discordgo.MessageEmbed{
+	if strings.Contains(m.Content, "#sfw") {
+		imageURL = product.MainImage
+	}
+
+	return &discordgo.MessageEmbed{
 		URL:         product.URL,
 		Title:       product.Name,
 		Description: product.Description,
 		Image: &discordgo.MessageEmbedImage{
 			URL: imageURL,
+		},
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL:    product.MainImage,
+			Width:  0,
+			Height: 0,
 		},
 		Footer: &discordgo.MessageEmbedFooter{
 			Text:    fmt.Sprintf("SKU: %d", product.Sku),
@@ -45,14 +63,5 @@ func DakiShow(s *discordgo.Session, m *discordgo.MessageCreate) {
 				Value: fmt.Sprintf("%s %s", product.Offers[0].Price, product.Offers[0].PriceCurrency),
 			},
 		},
-	})
-	if err != nil {
-		s.ChannelMessageSend(m.ChannelID, err.Error())
-		return
-	}
-
-	s.MessageReactionAdd(m.ChannelID, msg.ID, "💶")
-	s.MessageReactionAdd(m.ChannelID, msg.ID, "💴")
-	s.MessageReactionAdd(m.ChannelID, msg.ID, "💵")
-	s.MessageReactionAdd(m.ChannelID, msg.ID, "💷")
+	}, nil
 }
