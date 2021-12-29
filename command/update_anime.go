@@ -86,8 +86,6 @@ func UpdateAnime(s *discordgo.Session) {
 		return
 	}
 
-	//s.ChannelMessageSend(static.AnimeNewsChannelID, "--------------------------\n  Anime of Today\n--------------------------")
-	//s.ChannelMessageSend(static.HentaiNewsChannelID, "--------------------------\n  Hentai of Today\n--------------------------")
 	hasAdult := false
 	for _, v := range mediaOfToday {
 		if v.Type == "Hentai" {

@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/Stegosawr/apiapi v0.0.0-20210929151256-7d3e136ce50c
 	github.com/Stegosawr/currency v0.0.0-20211030231643-8e81d57900f4
+	github.com/Stegosawr/solarisapi v0.0.0-20211229191618-98566a6628b6
 	github.com/bwmarrin/discordgo v0.23.2
 	github.com/gan-of-culture/octopus-api v0.0.0-20211218220856-fdbb8ca6dabf
 )

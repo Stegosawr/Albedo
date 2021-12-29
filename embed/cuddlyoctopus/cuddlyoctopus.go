@@ -1,7 +1,6 @@
 package cuddlyoctopus
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -24,7 +23,7 @@ func New() static.Embeder {
 func (e *embeder) Embed(s *discordgo.Session, m *discordgo.MessageCreate) (*discordgo.MessageEmbed, error) {
 	matchedURL := reProductURL.FindString(m.Content)
 	if matchedURL == "" {
-		return nil, errors.New("invalid cuddlyoctopus URL")
+		return nil, static.ErrURLParseFailed
 	}
 
 	product, err := octopusapi.GetProductByURL(matchedURL)
@@ -49,9 +48,7 @@ func (e *embeder) Embed(s *discordgo.Session, m *discordgo.MessageCreate) (*disc
 			URL: imageURL,
 		},
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL:    product.MainImage,
-			Width:  0,
-			Height: 0,
+			URL: product.MainImage,
 		},
 		Footer: &discordgo.MessageEmbedFooter{
 			Text:    fmt.Sprintf("SKU: %d", product.Sku),

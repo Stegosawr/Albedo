@@ -86,6 +86,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		static.AmiAmi:        regexp.MustCompile(`https://www.amiami.(?:com|jp)/.+[gs]code=[\w-]+`),
 		static.CuddlyOctopus: regexp.MustCompile(`https://cuddlyoctopus.com/product/[^/]+`),
 		static.NHentai:       regexp.MustCompile(`^\+?[0-9]{5,6}`),
+		static.SolarisJapan:  regexp.MustCompile(`https://solarisjapan\.com.*/products/.+`),
 	}
 
 	for k, v := range regexList {
@@ -110,7 +111,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			s.MessageReactionAdd(m.ChannelID, msg.ID, "➡️")
 		}
 
-		if k == static.AmiAmi || k == static.CuddlyOctopus {
+		if k == static.AmiAmi || k == static.CuddlyOctopus || k == static.SolarisJapan {
 			s.MessageReactionAdd(m.ChannelID, msg.ID, "💶")
 			s.MessageReactionAdd(m.ChannelID, msg.ID, "💴")
 			s.MessageReactionAdd(m.ChannelID, msg.ID, "💵")

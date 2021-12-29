@@ -52,4 +52,6 @@ const (
 	CuddlyOctopus = "cuddlyoctopus"
 	// NHentai keyword for nhentai.net
 	NHentai = "nhentai"
+	// SolarisJapan keyword for solarisjapan.com
+	SolarisJapan = "SolarisJapan"
 )
