@@ -15,6 +15,7 @@ import (
 	"github.com/stegosawr/Albedo/embed"
 	"github.com/stegosawr/Albedo/reactions"
 	"github.com/stegosawr/Albedo/static"
+	"github.com/stegosawr/Albedo/utils"
 )
 
 // Variables used for command line parameters
@@ -83,6 +84,8 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	regexList := map[string]*regexp.Regexp{
+		// has to be done first -> unshortens twitter URLs so the bot can react
+		static.TwitterProxy:  regexp.MustCompile(`https://t.co/\w+`),
 		static.AmiAmi:        regexp.MustCompile(`https://www.amiami.(?:com|jp)/.+[gs]code=[\w-]+`),
 		static.CuddlyOctopus: regexp.MustCompile(`https://cuddlyoctopus.com/product/[^/]+`),
 		static.NHentai:       regexp.MustCompile(`^\+?[0-9]{5,6}`),
@@ -95,29 +98,44 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			continue
 		}
 
-		embed, err := embed.Embed(s, m, k)
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
-			break
-		}
-		msg, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
-		if err != nil {
-			s.ChannelMessageSend(m.ChannelID, err.Error())
-			break
+		if k == static.TwitterProxy {
+			newURL, err := utils.UnShortenURL(matchedRegex)
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, err.Error())
+				break
+			}
+
+			m.Content = strings.ReplaceAll(m.Content, matchedRegex, newURL)
+			continue
 		}
 
-		if k == static.AmiAmi {
-			s.MessageReactionAdd(m.ChannelID, msg.ID, "⬅️")
-			s.MessageReactionAdd(m.ChannelID, msg.ID, "➡️")
-		}
+		switch k {
+		case static.AmiAmi, static.CuddlyOctopus, static.SolarisJapan:
+			embed, err := embed.Embed(s, m, k)
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, err.Error())
+				break
+			}
+			msg, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+			if err != nil {
+				s.ChannelMessageSend(m.ChannelID, err.Error())
+				break
+			}
 
-		if k == static.AmiAmi || k == static.CuddlyOctopus || k == static.SolarisJapan {
-			s.MessageReactionAdd(m.ChannelID, msg.ID, "💶")
-			s.MessageReactionAdd(m.ChannelID, msg.ID, "💴")
-			s.MessageReactionAdd(m.ChannelID, msg.ID, "💵")
-			s.MessageReactionAdd(m.ChannelID, msg.ID, "💷")
-		}
+			if k == static.AmiAmi {
+				s.MessageReactionAdd(m.ChannelID, msg.ID, "⬅️")
+				s.MessageReactionAdd(m.ChannelID, msg.ID, "➡️")
+			}
 
+			if k == static.AmiAmi || k == static.CuddlyOctopus || k == static.SolarisJapan {
+				s.MessageReactionAdd(m.ChannelID, msg.ID, "💶")
+				s.MessageReactionAdd(m.ChannelID, msg.ID, "💴")
+				s.MessageReactionAdd(m.ChannelID, msg.ID, "💵")
+				s.MessageReactionAdd(m.ChannelID, msg.ID, "💷")
+			}
+		case static.NHentai:
+			command.NhentaiShow(s, m)
+		}
 		break
 	}
 

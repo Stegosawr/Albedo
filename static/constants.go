@@ -54,4 +54,6 @@ const (
 	NHentai = "nhentai"
 	// SolarisJapan keyword for solarisjapan.com
 	SolarisJapan = "SolarisJapan"
+	// TwitterProxy keyword for twitter shortend URLs
+	TwitterProxy = "TwitterProxy"
 )
