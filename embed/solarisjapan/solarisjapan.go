@@ -33,13 +33,16 @@ func (e *embeder) Embed(s *discordgo.Session, m *discordgo.MessageCreate) (*disc
 
 	status, ok := product.Product.Info["Release Date"]
 	if ok {
-		status = fmt.Sprintf("*%s* - Release Date: %s", product.Product.Variants[0].Title, status)
+		status = fmt.Sprintf("*%s* - Release Date: %s", strings.ToUpper(product.Product.Variants[0].Title), status)
 	} else {
 		status = fmt.Sprintf("*%s*", product.Product.Variants[0].Title)
 	}
 
 	description := ""
 	for k, v := range product.Product.Info {
+		if k == "Release Date" {
+			continue
+		}
 		description = fmt.Sprintf("%s\n%s: %s", description, k, v)
 	}
 	description = strings.TrimSpace(description)

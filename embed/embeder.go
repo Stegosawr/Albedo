@@ -4,6 +4,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/stegosawr/Albedo/embed/amiami"
 	"github.com/stegosawr/Albedo/embed/cuddlyoctopus"
+	"github.com/stegosawr/Albedo/embed/solarisjapan"
 	"github.com/stegosawr/Albedo/static"
 )
 
@@ -13,6 +14,7 @@ func init() {
 	embedersMap = map[string]static.Embeder{
 		static.AmiAmi:        amiami.New(),
 		static.CuddlyOctopus: cuddlyoctopus.New(),
+		static.SolarisJapan:  solarisjapan.New(),
 	}
 }
 
