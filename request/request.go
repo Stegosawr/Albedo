@@ -3,7 +3,7 @@ package request
 import (
 	"crypto/tls"
 	"errors"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -56,7 +56,7 @@ func Get(url string) (string, error) {
 	}
 	defer resp.Body.Close()
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", err
 	}

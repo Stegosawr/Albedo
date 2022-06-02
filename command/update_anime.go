@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"regexp"
 	"strings"
@@ -171,7 +171,7 @@ func scraperAnime() ([]MediaInfo, error) {
 	}
 	defer jsonRes.Body.Close()
 
-	resBody, err := ioutil.ReadAll(jsonRes.Body)
+	resBody, err := io.ReadAll(jsonRes.Body)
 	if err != nil {
 		return nil, err
 	}
