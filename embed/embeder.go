@@ -19,7 +19,7 @@ func init() {
 }
 
 // Embed call the other Embeders
-func Embed(s *discordgo.Session, m *discordgo.MessageCreate, key string) (*discordgo.MessageEmbed, error) {
+func Embed(s *discordgo.Session, m *discordgo.MessageCreate, key string) ([]*discordgo.MessageEmbed, error) {
 	embeder := embedersMap[key]
 	if embeder == nil {
 		return nil, nil

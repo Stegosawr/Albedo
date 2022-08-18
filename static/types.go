@@ -10,7 +10,7 @@ type Command struct {
 
 // Embeder of different types of content mostly website content
 type Embeder interface {
-	Embed(s *discordgo.Session, m *discordgo.MessageCreate) (*discordgo.MessageEmbed, error)
+	Embed(s *discordgo.Session, m *discordgo.MessageCreate) ([]*discordgo.MessageEmbed, error)
 }
 
 // ReactionHandler of reactions to messages

@@ -86,7 +86,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	regexList := map[string]*regexp.Regexp{
 		// has to be done first -> unshortens twitter URLs so the bot can react
 		static.TwitterProxy:  regexp.MustCompile(`https://t.co/\w+`),
-		static.AmiAmi:        regexp.MustCompile(`https://www.amiami.(?:com|jp)/.+[gs]code=[\w-]+`),
+		static.AmiAmi:        regexp.MustCompile(`https://www.amiami.(?:com|jp)/.+(?:[gs]code=[\w-]+|s_keywords=([\w-%]+))`),
 		static.CuddlyOctopus: regexp.MustCompile(`https://cuddlyoctopus.com/product/[^/]+`),
 		static.NHentai:       regexp.MustCompile(`^\+?[0-9]{5,6}`),
 		static.SolarisJapan:  regexp.MustCompile(`https://solarisjapan\.com.*/products/.+`),
@@ -111,27 +111,29 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 		switch k {
 		case static.AmiAmi, static.CuddlyOctopus, static.SolarisJapan:
-			embed, err := embed.Embed(s, m, k)
+			embeds, err := embed.Embed(s, m, k)
 			if err != nil {
 				s.ChannelMessageSend(m.ChannelID, err.Error())
 				break
 			}
-			msg, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
-			if err != nil {
-				s.ChannelMessageSend(m.ChannelID, err.Error())
-				break
-			}
+			for _, embed := range embeds {
+				msg, err := s.ChannelMessageSendEmbed(m.ChannelID, embed)
+				if err != nil {
+					s.ChannelMessageSend(m.ChannelID, err.Error())
+					break
+				}
 
-			if k == static.AmiAmi {
-				s.MessageReactionAdd(m.ChannelID, msg.ID, "⬅️")
-				s.MessageReactionAdd(m.ChannelID, msg.ID, "➡️")
-			}
+				if k == static.AmiAmi {
+					s.MessageReactionAdd(m.ChannelID, msg.ID, "⬅️")
+					s.MessageReactionAdd(m.ChannelID, msg.ID, "➡️")
+				}
 
-			if k == static.AmiAmi || k == static.CuddlyOctopus || k == static.SolarisJapan {
-				s.MessageReactionAdd(m.ChannelID, msg.ID, "💶")
-				s.MessageReactionAdd(m.ChannelID, msg.ID, "💴")
-				s.MessageReactionAdd(m.ChannelID, msg.ID, "💵")
-				s.MessageReactionAdd(m.ChannelID, msg.ID, "💷")
+				if k == static.AmiAmi || k == static.CuddlyOctopus || k == static.SolarisJapan {
+					s.MessageReactionAdd(m.ChannelID, msg.ID, "💶")
+					s.MessageReactionAdd(m.ChannelID, msg.ID, "💴")
+					s.MessageReactionAdd(m.ChannelID, msg.ID, "💵")
+					s.MessageReactionAdd(m.ChannelID, msg.ID, "💷")
+				}
 			}
 		case static.NHentai:
 			command.NhentaiShow(s, m)

@@ -20,7 +20,7 @@ func New() static.Embeder {
 }
 
 // Embed from message content
-func (e *embeder) Embed(s *discordgo.Session, m *discordgo.MessageCreate) (*discordgo.MessageEmbed, error) {
+func (e *embeder) Embed(s *discordgo.Session, m *discordgo.MessageCreate) ([]*discordgo.MessageEmbed, error) {
 	matchedURL := reProductURL.FindString(m.Content)
 	if matchedURL == "" {
 		return nil, static.ErrURLParseFailed
@@ -47,25 +47,27 @@ func (e *embeder) Embed(s *discordgo.Session, m *discordgo.MessageCreate) (*disc
 	}
 	description = strings.TrimSpace(description)
 
-	return &discordgo.MessageEmbed{
-		URL:         matchedURL,
-		Title:       product.Product.Title,
-		Description: description,
-		Image: &discordgo.MessageEmbedImage{
-			URL: product.Product.Image.Src,
-		},
-		Footer: &discordgo.MessageEmbedFooter{
-			Text:    fmt.Sprintf("made by: %s - Images: 1/%d", product.Product.Vendor, len(product.Product.Images)),
-			IconURL: "https://cdn.shopify.com/s/files/1/0318/2649/t/54/assets/favicon.ico?v=8178696738005321811",
-		},
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:  "Price:",
-				Value: fmt.Sprintf("%s JPY", product.Product.Variants[0].Price),
+	return []*discordgo.MessageEmbed{
+		{
+			URL:         matchedURL,
+			Title:       product.Product.Title,
+			Description: description,
+			Image: &discordgo.MessageEmbedImage{
+				URL: product.Product.Image.Src,
 			},
-			{
-				Name:  "Status:",
-				Value: status,
+			Footer: &discordgo.MessageEmbedFooter{
+				Text:    fmt.Sprintf("made by: %s - Images: 1/%d", product.Product.Vendor, len(product.Product.Images)),
+				IconURL: "https://cdn.shopify.com/s/files/1/0318/2649/t/54/assets/favicon.ico?v=8178696738005321811",
+			},
+			Fields: []*discordgo.MessageEmbedField{
+				{
+					Name:  "Price:",
+					Value: fmt.Sprintf("%s JPY", product.Product.Variants[0].Price),
+				},
+				{
+					Name:  "Status:",
+					Value: status,
+				},
 			},
 		},
 	}, nil

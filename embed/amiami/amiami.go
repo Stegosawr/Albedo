@@ -13,8 +13,10 @@ import (
 )
 
 const imgSite = "https://img.amiami.com"
+const siteReg = `https://www\.amiami\.(?:com|jp)/`
 
-var reFigureCode = regexp.MustCompile(`https://www\.amiami\.(?:com|jp)/.+([sg])code=([\w-]+)`)
+var reFigureCode = regexp.MustCompile(siteReg + `.+([sg])code=([\w-]+)`)
+var reSearchKeywords = regexp.MustCompile(siteReg + `.+s_keywords=([\w-%]+)`)
 
 type embeder struct{}
 
@@ -24,61 +26,62 @@ func New() static.Embeder {
 }
 
 // Embed from message content
-func (e *embeder) Embed(s *discordgo.Session, m *discordgo.MessageCreate) (*discordgo.MessageEmbed, error) {
-	matchedURL := reFigureCode.FindStringSubmatch(m.Content)
-	if len(matchedURL) < 1 {
-		return nil, errors.New("apiapi failed cannot parse CodeType and/or GCode")
-	}
+func (e *embeder) Embed(s *discordgo.Session, m *discordgo.MessageCreate) ([]*discordgo.MessageEmbed, error) {
 
-	codeType := apiapi.CodeTypeG
-	if matchedURL[1] == "s" {
-		codeType = apiapi.CodeTypeS
-	}
-
-	details, err := apiapi.GetItemByCode(codeType, matchedURL[2])
+	items, err := getProductDetails(&m.Content)
 	if err != nil {
 		return nil, err
 	}
 
-	if details.Item.CPriceTaxed == 0 {
-		details.Item.CPriceTaxed = details.Item.Price
-	}
+	embeds := []*discordgo.MessageEmbed{}
 
-	price := fmt.Sprintf("__%d__ JPY", details.Item.CPriceTaxed)
-	if details.Item.CPriceTaxed > details.Item.Price {
-		price = fmt.Sprintf("~~%d JPY~~-> __%d__ JPY | You save %d JPY", details.Item.CPriceTaxed, details.Item.Price, details.Item.CPriceTaxed-details.Item.Price)
-	}
+	for _, details := range items {
 
-	status := "Release Date: " + details.Item.Releasedate
-	if details.Item.Preorderitem == 1 {
-		status = "*PRE-ORDER* - " + status
-	}
-	if details.Item.PreownAttention == 1 {
-		status = "*PRE-OWNED* - " + status
-	}
+		if details.Item.CPriceTaxed == 0 {
+			details.Item.CPriceTaxed = details.Item.Price
+		}
 
-	return &discordgo.MessageEmbed{
-		URL:         "https://www.amiami.com/eng/detail/?scode=" + details.Item.SCode,
-		Title:       details.Item.SNameSimple,
-		Description: details.Item.Spec,
-		Image: &discordgo.MessageEmbedImage{
-			URL: imgSite + details.Item.MainImageURL,
-		},
-		Footer: &discordgo.MessageEmbedFooter{
-			Text:    fmt.Sprintf("made by %s - Stock: %d - Images: 1/%d", details.Item.MakerName, details.Item.Stock, details.Item.ImageReviewnumber+1), // account for the main img
-			IconURL: "https://www.amiami.com/favicon.png",
-		},
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:  "Price:",
-				Value: price,
+		price := fmt.Sprintf("__%d__ JPY", details.Item.CPriceTaxed)
+		if details.Item.CPriceTaxed > details.Item.Price {
+			price = fmt.Sprintf("~~%d JPY~~-> __%d__ JPY | You save %d JPY", details.Item.CPriceTaxed, details.Item.Price, details.Item.CPriceTaxed-details.Item.Price)
+		}
+
+		status := "Release Date: " + details.Item.Releasedate
+		if details.Item.Preorderitem == 1 {
+			status = "*PRE-ORDER* - " + status
+		}
+		if details.Item.PreownAttention == 1 {
+			status = "*PRE-OWNED* - " + status
+		}
+
+		embeds = append(embeds,
+			&discordgo.MessageEmbed{
+				URL:         "https://www.amiami.com/eng/detail/?scode=" + details.Item.SCode,
+				Title:       details.Item.SNameSimple,
+				Description: details.Item.Spec,
+				Image: &discordgo.MessageEmbedImage{
+					URL: imgSite + details.Item.MainImageURL,
+				},
+				Footer: &discordgo.MessageEmbedFooter{
+					Text:    fmt.Sprintf("made by %s - Stock: %d - Images: 1/%d", details.Item.MakerName, details.Item.Stock, details.Item.ImageReviewnumber+1), // account for the main img
+					IconURL: "https://www.amiami.com/favicon.png",
+				},
+				Fields: []*discordgo.MessageEmbedField{
+					{
+						Name:  "Price:",
+						Value: price,
+					},
+					{
+						Name:  "Status:",
+						Value: status,
+					},
+				},
 			},
-			{
-				Name:  "Status:",
-				Value: status,
-			},
-		},
-	}, nil
+		)
+
+	}
+
+	return embeds, nil
 }
 
 // GetNextImage to display of selected embed
@@ -154,5 +157,35 @@ func GetNextImage(s *discordgo.Session, mra *discordgo.MessageReactionAdd) {
 	if err != nil {
 		fmt.Println(err)
 	}
+
+}
+
+func getProductDetails(messageContent *string) ([]apiapi.ProductDetails, error) {
+
+	out := []apiapi.ProductDetails{}
+
+	matchedURL := reFigureCode.FindStringSubmatch(*messageContent)
+	if len(matchedURL) >= 1 {
+		codeType := apiapi.CodeTypeG
+		if matchedURL[1] == "s" {
+			codeType = apiapi.CodeTypeS
+		}
+
+		details, err := apiapi.GetItemByCode(codeType, matchedURL[2])
+		if err != nil {
+			return nil, err
+		}
+
+		out = append(out, details)
+		return out, nil
+	}
+
+	matchedURL = reSearchKeywords.FindStringSubmatch(*messageContent)
+	if len(matchedURL) >= 1 {
+		out, err := apiapi.GetItemsByKeywords(matchedURL[1])
+		return out, err
+	}
+
+	return nil, errors.New("apiapi failed cannot parse CodeType and/or GCode")
 
 }
