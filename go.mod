@@ -3,7 +3,7 @@ module github.com/stegosawr/Albedo
 go 1.19
 
 require (
-	github.com/Stegosawr/apiapi v0.0.0-20221104094118-1b62f9e435bd
+	github.com/Stegosawr/apiapi v0.0.0-20221104095132-7a84d190f9a6
 	github.com/Stegosawr/currency v0.0.0-20211030231643-8e81d57900f4
 	github.com/Stegosawr/solarisapi v0.0.0-20220602151344-c7871c07e117
 	github.com/bwmarrin/discordgo v0.26.1
