@@ -153,7 +153,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "dailyMedia":
 		command.UpdateAnime(s)
 	case "animeSites":
-		s.ChannelMessageSend(m.ChannelID, "https://piracy.moe/")
+		s.ChannelMessageSend(m.ChannelID, "https://theindex.moe/")
 	case "bestReleases":
 		s.ChannelMessageSend(m.ChannelID, "https://releases.moe/")
 	case "delmsg":
